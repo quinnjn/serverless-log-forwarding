@@ -509,3 +509,41 @@ describe('Catching errors in serverless config ', () => {
     expect(plugin.updateResources.bind(plugin)).to.throw(expectedError);
   });
 });
+
+describe("ARNs", () => {
+  it("accepts fully qualified ARN", () => {
+    const plugin = constructPluginResources({
+      destinationARN: 'arn:aws:lambda:us-moon-1:314159265358:function:testforward-test-forward',
+    });
+
+    plugin.updateResources();
+
+    expect(plugin.serverless.service.resources.Resources.LogForwardingLambdaPermission.Properties.FunctionName).to.eql(
+      "arn:aws:lambda:us-moon-1:314159265358:function:testforward-test-forward"
+    );
+    expect(plugin.serverless.service.resources.Resources.SubscriptionFilterTestFunctionOne.Properties.DestinationArn).to.eql(
+      "arn:aws:lambda:us-moon-1:314159265358:function:testforward-test-forward"
+    );
+    expect(plugin.serverless.service.resources.Resources.SubscriptionFilterTestFunctionTwo.Properties.DestinationArn).to.eql(
+      "arn:aws:lambda:us-moon-1:314159265358:function:testforward-test-forward"
+    );
+  });
+
+  it("accepts partial ARN", () => {
+    const plugin = constructPluginResources({
+      destinationARN: 'testforward-test-forward',
+    });
+
+    plugin.updateResources();
+
+    expect(plugin.serverless.service.resources.Resources.LogForwardingLambdaPermission.Properties.FunctionName).to.eql(
+      "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:testforward-test-forward"
+    );
+    expect(plugin.serverless.service.resources.Resources.SubscriptionFilterTestFunctionOne.Properties.DestinationArn).to.eql(
+      "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:testforward-test-forward"
+    );
+    expect(plugin.serverless.service.resources.Resources.SubscriptionFilterTestFunctionTwo.Properties.DestinationArn).to.eql(
+      "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:testforward-test-forward"
+    );
+  });
+});

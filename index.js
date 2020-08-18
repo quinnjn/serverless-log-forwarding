@@ -42,6 +42,15 @@ class LogForwardingPlugin {
     this.serverless.cli.log('Log Forwarding Resources Updated');
   }
 
+  fullyQualifiedArn(arn) {
+    if (arn.startsWith("arn:")) {
+      return arn;
+    }
+
+    // Assume its just the function name
+    return `arn:aws:lambda:\${AWS::Region}:\${AWS::AccountId}:function:${arn}`
+  }
+
   /**
    * Creates CloudFormation resources object with log forwarding
    * @return {Object} resources object
@@ -57,7 +66,7 @@ class LogForwardingPlugin {
     const roleArn = service.custom.logForwarding.roleArn || '';
     const createLambdaPermission = !(service.custom.logForwarding.createLambdaPermission === false);
     // Get options and parameters to make resources object
-    const arn = service.custom.logForwarding.destinationARN;
+    const arn = this.fullyQualifiedArn(service.custom.logForwarding.destinationARN);
     // Get list of all functions in this lambda
     const principal = `logs.${service.provider.region}.amazonaws.com`;
     // Generate resources object for each function
